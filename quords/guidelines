@@ -1,0 +1,439 @@
+Start Crawl Application:
+========================
+1. create env vars in /etc/profile
+2. create heritrix_mq.jar by pom.xml; download rabbitMQ client JAR from hoempage and add it to lib dir on Heritrix
+3. start heritrix $HERITRIX_HOME/bin/heritrix -a admin:admin; chmod 777
+4. in browser: https://localhost:8443/engine/job/aitcrawl1
+5. start python script receive.py; sudo python receive.py // /opt/heritrix_src/HeritrixMQ/resources
+6. check constants in bean in phantomjs/settings.py
+7. test aitcrawler1
+8. crawler-beans.cxml //config file for crawler
+9. Start Django1.4.3: python manage.py runserver // the copy from BL // var/log/rabbitmq 
+10. in crawler-beans.cxml: longerOverrides=http://www.jcdl2013.org/
+11. Start wayback /home/user/apache-tomcat-6.0.32/bin/startup.sh
+
+sudo python read_log_urls_v2.py references.txt // to read links from references.txt and create files with convention names
+sudo python compare_to_wayback_v2.py -h 78 --threshold2 12 // to compare original and wayback screenshots and to write to mongo db and to file
+to test Wayback scripts check running: StartMongo.sh, StartWayback.sh, StartTomcat.sh
+
+12. /opt$ ./StartMongo.sh
+13. /opt/test_django/quords$ sudo python manage.py runserver
+
+Start Web Service Application:
+==============================
+cd /opt/test_django/quords
+./StartMongo.sh
+./StartDjango.sh
+optionally ./CleanMongo.sh
+optionally ./CleanDjangoDb.sh
+Note that comparison analysis results are written to output.txt (added on the end of the file) and to MongoDB
+
+Samples:
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg&ocr=true&psnr=true
+{siftMatchedPoints: 262, totalSiftPoints: 1715, ocrMatch: 1515, psnrSimilarity: 2.76701}
+
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg&ocr=true&psnr=false
+{siftMatchedPoints: 261, totalSiftPoints: 1709, ocrMatch: 1515, psnrSimilarity: None}
+
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg&ocr=false&psnr=true
+{siftMatchedPoints: 258, totalSiftPoints: 1712, ocrMatch: 0, psnrSimilarity: 2.76581}
+
+127.0.0.1:8000/qa/comparecollection?seed=/opt/test_django/quords/qa/thumbs.urls.seed.txt&psnr=true
+for the first 20 entries in seed list given by BL (without ocr):
+{siftMatchedPoints: 252, totalSiftPoints: 1681, ocrMatch: 0, psnrSimilarity: 2.6929}
+{siftMatchedPoints: 0, totalSiftPoints: 0, ocrMatch: 0, psnrSimilarity: 6.2071}
+{siftMatchedPoints: 0, totalSiftPoints: 0, ocrMatch: 0, psnrSimilarity: 6.2071}
+{siftMatchedPoints: 0, totalSiftPoints: 0, ocrMatch: 0, psnrSimilarity: 6.2071}
+{siftMatchedPoints: 109, totalSiftPoints: 4854, ocrMatch: 0, psnrSimilarity: 4.59937}
+{siftMatchedPoints: 98, totalSiftPoints: 4855, ocrMatch: 0, psnrSimilarity: 4.59547}
+{siftMatchedPoints: 86, totalSiftPoints: 4854, ocrMatch: 0, psnrSimilarity: 4.59725}
+{siftMatchedPoints: 85, totalSiftPoints: 4895, ocrMatch: 0, psnrSimilarity: 4.61495}
+{siftMatchedPoints: 71, totalSiftPoints: 4855, ocrMatch: 0, psnrSimilarity: 4.60281}
+{siftMatchedPoints: 70, totalSiftPoints: 4856, ocrMatch: 0, psnrSimilarity: 4.60109}
+{siftMatchedPoints: 101, totalSiftPoints: 4855, ocrMatch: 0, psnrSimilarity: 4.6058}
+{siftMatchedPoints: 268, totalSiftPoints: 1552, ocrMatch: 0, psnrSimilarity: 6.30102}
+{siftMatchedPoints: 77, totalSiftPoints: 1552, ocrMatch: 0, psnrSimilarity: 6.00044}
+{siftMatchedPoints: 103, totalSiftPoints: 1552, ocrMatch: 0, psnrSimilarity: 5.98311}
+
+CSV entry samples are stored in /opt/test_django/quords/output.txt e.g.:
+2013-03-21 15:01:44.855518;1.09455895424;http://www.acses.org.uk/;http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg;66158797;1681;52;252;VERY DIFFERENT;60;30;0;438699;21483;2.6929;3.0;DIFFERENT;http://127.0.0.1:8000/qa/orig/1363878100.14.png;
+
+Created original files are stored in /opt/test_django/quords/qa/orig/ and accessible by e.g. http://127.0.0.1:8000/qa/orig/1363878181.78.png
+
+http://127.0.0.1:8000/qa/blank?i1=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg
+http://127.0.0.1:8000/qa/comparecollection?seed=/opt/test_django/quords/qa/thumbs.urls.seed.txt
+http://127.0.0.1:8000/qa/compare?i1=http://www.annlenny.co.uk/&i2=%20http://www.webarchive.org.uk/thumbs/36077577/49512874c.jpg // no connection
+sudo /opt/phantomjs/bin/phantomjs /opt/phantomjs/examples/rasterize.js http://www.annlenny.co.uk/ origmy.png  // no connection
+sudo /opt/phantomjs/bin/phantomjs /opt/phantomjs/examples/rasterize.js http://www.acses.org.uk/ origmy.png  // ok
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg // {siftMatchedPoints: 278, totalSiftPoints: 1803, ocrMatch: 1749}
+http://127.0.0.1:8000/qa/blank?i1=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg // {ocrMatch: 50}
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg&ocr=True // {siftMatchedPoints: 277, totalSiftPoints: 1790, ocrMatch: 1747}
+{siftMatchedPoints: 279, totalSiftPoints: 1798, ocrMatch: 0} for ocr=false
+http://127.0.0.1:8000/qa/comparecollection?seed=/opt/test_django/quords/qa/thumbs.urls.seed.txt // 
+{siftMatchedPoints: 279, totalSiftPoints: 1797, ocrMatch: 0}
+{siftMatchedPoints: 94, totalSiftPoints: 4234, ocrMatch: 0}
+{siftMatchedPoints: 268, totalSiftPoints: 1552, ocrMatch: 0}
+{siftMatchedPoints: 40, totalSiftPoints: 2067, ocrMatch: 0}
+{siftMatchedPoints: 554, totalSiftPoints: 41214, ocrMatch: 0}
+
+sudo vim /etc/bash.bashrc // PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig; export PKG_CONFIG
+
+blsend.py -> send messages readed from most_recent.log to queue; aitreceive_phantom read messages from queue and create screenshots
+readlog_phantom.py -> read messages from last job log and create images in /opt/work/reference
+in Wayback: http://localhost:8080/20130122104848/http://www.schk.sk/en/digilib/2012/programme-committee/
+
+StartMongo.sh:
+==============
+sudo rm -rf /opt/data/db/*.*
+sudo mongod --rest --port 8060 --dbpath /opt/data/db &
+
+cd /opt/
+./StartQuards // without sudo
+kill 1234 // to stop Heritrix process (or kill -9)
+
+Monitrix:
+=========
+https://github.com/ukwa/monitrix/wiki/Installation
+http://www.playframework.com/download (2.0.4.zip)
+extract play framework and monitrix to /home/training
+chmod 777 für monitrix
+change .profile in /home/training: export PATH=$PATH:/home/training/play-2.0.4
+source .profile // to refresh PATH env, or source ~/.profile; check /etc/sudoers.tmp
+check monitrix config file
+play run // under localhost:9000 add path to crawl.log
+
+Imagemagick:
+============
+sudo apt-get install imagemagick
+
+Linux:
+======
+sudo upgrade
+sudo update
+sudo dpkg -s python-pika // 0.9.5-1
+sudo python setup.py install // in pika
+
+Maven 2.2.1:
+============
+sudo apt-get install maven2
+sudo mvn clean install -Dmaven.test.skip=true
+
+OpenCV: (python import cv2)
+=======
+tar -xvf OpenCV-2.4.3.tar.bz2
+cd OpenCV-2.4.3/
+mkdir release
+cd release
+cmake -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=OFF -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D BUILD_EXAMPLES=ON ..
+make
+sudo make install
+
+sudo apt-get install libdkg2? or libqt4-dev can be necessary with additional cmake...
+
+
+Python:
+=======
+to comment out a block: if False: '''
+commands
+'''
+sudo apt-get install python-qt4
+sudo grep -r "INSTALLED_APP" django-tastypie/
+
+Pip:
+====
+http://www.saltycrane.com/blog/2010/02/how-install-pip-ubuntu/
+$ sudo apt-get install python-pip python-dev build-essential 
+$ sudo pip install --upgrade pip 
+$ sudo pip install --upgrade virtualenv 
+
+*** sudo apt-get install python-pip git-core
+*** sudo pip install pika==0.9.8
+
+sudo pip install numpy
+or sudo apt-get install python-numpy python-scipy cmake
+
+RabbitMQ:
+=========
+www.rabbitmq.com/download.html -//- /install-debian.html; -//- /configure.html#customise-general-unix-environment
+
+*** /etc/apt/sources.list:
+*** deb http://www.rabbitmq.com/debian/ testing main
+*** wget http://www.rabbitmq.com/rabbitmq-signing-key-public.asc
+*** sudo apt-key add rabbitmq-signing-key-public.asc
+*** apt-get update
+*** apt-get upgrade
+*** sudo apt-get install rabbitmq-server
+
+sudo rabbitmqctl status
+http://www.rabbitmq.com/tutorials/tutorial-one-python.html
+sudo rabbitmqctl list_queues
+deb http://www.rabbitmq.com/debian testing main // in /etc/apt/sources.list
+
+www.rabbitmq.com/management.html
+sudo rabbitmq-plugins enabled rabbitmq_management
+http://localhost:15672/ // guest/guest
+sudo /etc/init.d/rabbitmq-server restart
+
+https://bitbucket.org/travis/heritrix3/src/dff143b301fb/modules/src/main/java/org/archive/modules/extractor/ContentExtractor.java
+
+Java:
+====
+Download java jdk6...bin from oracle.com
+chmod +x jdk*.bin
+./jdk...
+mkdir /dev/jdk // mv there jdk1.6...
+sudo ln -s jdk6... jdk-6
+vim /home/training/.bashrc  // export JAVA_HOME=/dev/jdk/jdk-6  export PATH=$PATH:$JAVA_HOME/bin
+
+sudo cp -rf jdk... /usr/lib/jvm/
+update-alternatives --config java
+
+https://help.ubuntu.com/community/Java
+
+Install oracle sun java 6 jdk 32-bit 
+
+ $ wget http://download.oracle.com/otn-pub/java/jdk/6u34-b04/jdk-6u34-linux-i586.bin
+ $ chmod u+x jdk-6u34-linux-i586.bin
+ $ ./jdk-6u34-linux-i586.bin
+ $ sudo mkdir -p /usr/lib/jvm
+ $ sudo mv jdk1.6.0_34 /usr/lib/jvm/
+ $ sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk1.6.0_34/bin/java" 1
+ $ sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk1.6.0_34/bin/javac" 1
+ $ sudo update-alternatives --install "/usr/lib/mozilla/plugins/libjavaplugin.so" "mozilla-javaplugin.so" "/usr/lib/jvm/jdk1.6.0_34/jre/lib/i386/libnpjp2.so" 1
+ $ sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/lib/jvm/jre1.6.0_34/bin/javaws" 1
+ 
+
+Heritrix:
+=========
+
+download heritrix3.1.1-src.tar.gz: builds.archive.org:8080/maven2/org/archive/heritrix/heritrix/3.1.1/ [1]
+tar xvf heritrix...tar.gz
+sudo mv heritrix from Downloads to /opt
+HERITRIX_HOME = /opt/heritrix
+JAVA_HOME = /usr/lib/jvm/jdk1.6.0_34/
+https://webarchive.jira.com/wiki/display/Heritrix/Heritrix+3.0+and+3.1+User+Guide
+chmod u+x heritrix
+// https://github.com/internetarchive/heritrix3
+// crawler.archive.org/articles/developer_manual/building.html
+start: 
+$HERITRIX_HOME/bin/heritrix -a admin:admin
+=> user: admin, pwd: admin
+
+In Heritrix_src: mvn clean install => to create heritrix_mq-3.1.1.jar in target
+
+bind external linux PC:
+=======================
+sudo apt-get install fuse-utils sshfs
+sshfs schmidt@172.20.30.1:/home/schmidt /media/sqtsrv/schmidt
+
+bind shared folder:
+===================
+https://help.ubuntu.com/community/VirtualBox/GuestAdditions
+0. sudo apt-get install dkms
+1. Download a VirtualBox package from https://www.virtualbox.org/wiki/Downloads (you might have installed this package when you installed VirtualBox). 
+The package should include the VBoxGuestAdditions.iso file. //http://download.virtualbox.org/virtualbox/4.2.4/
+2. sudo apt-get install virtualbox-guest-additions-iso // on guest
+3. Just as you mounted a .iso CD image for your guest OS when installing it on the guest, now mount VBoxGuestAdditions.iso as a CD on the guest. 
+For example, in the VirtualBox window, choose the Storage section under Details, and so forth. Ordern pfad: C:\tmp Ordner Name: tmp  permanent
+4. cd /media/<cd name>
+5. sudo sh ./VBoxLinuxAdditions.run
+6. sudo adduser root vboxsf
+7. restart //sf_tmp will be created as a shared folder
+
+Django:
+=======
+https://www.djangoproject.com/download/
+sudo tar xzvf django1.4.3...tar.gz
+sudo chmod -R 777 Django...
+sudo chown -R user:group dir
+sudo python setup.py install
+copy BL webtools directory in Django
+pip install python-memcached
+
+scape@scape-training:/opt/Django-1.4.3/webtools$ sudo python manage.py runserver
+Validating models...
+
+0 errors found
+Django version 1.4.3, using settings 'webtools.settings'
+Development server is running at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+https://docs.djangoproject.com/en/dev/intro/tutorial01/
+
+python -c "import django; print(django.get_version())"
+
+django-admin.py startproject mysite // in /home/user/projects
+scape@scape-training:~/projects/first_django$ sudo python2.7 manage.py startserver localhost:8081
+
+http://lightbird.net/dbe/
+
+https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/ //WSGI
+
+
+Django REST:
+https://docs.djangoproject.com/en/dev/intro/tutorial01/
+sudo django-admin.py startproject mysite
+sudo python manage.py runserver
+sudo python manage.py syncdb
+sudo python manage.py startapp qa
+
+https://github.com/freshplum/django-simple-rest
+https://django-workshop.readthedocs.org/en/latest/weitere_themen/rest.html
+pip install django-tastypie
+
+https://bitbucket.org/jespern/django-piston/wiki/Home
+
+Mongo:
+======
+sudo apt-get install mongodb-server
+sudo mkdir data; db
+sudo mongod --rest --port 8060 --dbpath data/db &
+  
+# cd /tmp/                                                               
+# wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-0.9.2.tgz
+# tar -xzf mongodb-linux-x86_64-0.9.2.tgz
+root@v3ls1233:~/install/mongodb-linux-i686-2.2.2/bin#  ./mongod --rest --port 8060 --dbpath ../../data/db &
+
+http://docs.mongodb.org/ecosystem/drivers/python/
+
+
+receive.py:
+===========
+
+scape@scape-training:/opt/heritrix_src/HeritrixMQ/resources$ ls
+receive.py
+scape@scape-training:/opt/heritrix_src/HeritrixMQ/resources$ sudo ./receive.py 
+
+wayback:
+========
+
+https://webarchive.jira.com/wiki/display/wayback/Wayback+Installation+and+Configuration+Guide
+install tomcat tar.gz, wayback.tar.gz in /home/user without sudo; start tomcat with startup.sh; test localhost:8080; 
+cd /home/user
+gzip -d wayback-1.6.0.tar.gz // wayback with sudo
+tar xvf wayback-1.6.0.tar
+rm -rf /home/user/apache-tomcat-6.0.32/webapps/*
+cp /home/user/wayback/wayback-1.6.0.war /home/user/apache-tomcat-6.0.32/webapps
+then mv wayback.war to tomcat/webapps and change name to ROOT.war
+mv wayback-1.6.0.war ROOT.war
+Edit wayback.xml file is located in the /user/home/apache-tomcat-6.0.32/webapps/ROOT/WEB-INF
+replace 8080:wayback to 8080
+BDBCollection.xml -> set up the warcs directory
+warc files should not be in gz -> gzip -d xxx.warc.gz
+
+phantomjs:
+==========
+phantomjs.org/download.html => ...1.8.1....tar.bz2
+to get wayback screenshots: sudo phantomjs/bin/phantomjs phantomjs/examples/rasterize.js http://localhost:8080/20121219160919/https://ipres.ischool.utoronto.ca/ ipres.png
+
+Python screenshots:
+===================
+
+scape@scape-training:/opt$ sudo python ./Screenshot.py 
+saving ipresorig.png
+saving ipresarc.png
+scape@scape-training:/opt$ sudo phantomjs/bin/phantomjs phantomjs/examples/rasterize.js https://ipres.ischool.utoronto.ca/node/58 ipres_orig_phantomjs.png
+Unable to load the address!
+^Cscape@scape-training:/opt$ ls
+Django-1.4.3  heritrix_src  ipresorig.png  phantomjs      taverna-workbench-2.4.0   wayback
+heritrix      ipresarc.png  ipres.png      Screenshot.py  VBoxGuestAdditions-4.2.0  website.png
+scape@scape-training:/opt$ 
+
+
+OpenCV:
+=======
+http://opencv.willowgarage.com/wiki/InstallGuide%20%3A%20Debian
+http://indranilsinharoy.com/2012/11/01/installing-opencv-on-linux/
+
+  770  sudo find / -name cv2*.so
+  771  sudo find / -name site-package
+  772  sudo find / -name python2.7
+  773  ls -al /usr/local/lib/python2.7
+  774  ls -al /usr/local/lib/python2.7/site-packages/
+  775  cp /home/scape/Install/OpenCV-2.4.3/release/lib/cv2.so /usr/local/lib/python2.7/site-packages/
+  776  sudo cp /home/scape/Install/OpenCV-2.4.3/release/lib/cv2.so /usr/local/lib/python2.7/site-packages/
+
+
+scape@scape-training:~/Install/OpenCV-2.4.3/samples/python2$ sudo python -m pdb camera_qa.py /media/sf_tmp/trackleft/ /media/sf_tmp/trackright/
+
+sudo python camera_qa.py --feature=surf /media/sf_tmp/trackleft/ /media/sf_tmp/trackright/
+  813  sudo python camera_qa.py --feature=orb /media/sf_tmp/trackleft/ /media/sf_tmp/trackright/
+sudo python camera_qa.py --feature=orb /media/sf_tmp/trackleft/ /media/sf_tmp/trackright/
+sudo python blank.py /media/sf_tmp/blankdir/
+
+
+Make python known:
+==================
+
+copy cv2.so and *.pyc to
+scape@scape-training:/usr/lib/python2.7/dist-packages/pika$ ls /usr/local/lib/python2.7/site-packages
+
+
+OCR tesseract-ocr:
+==================
+sudo apt-get install tesseract-ocr
+http://code.google.com/p/tesseract-ocr/wiki/ReadMe
+
+http://computer-vision-talks.com/2011/07/comparison-of-the-opencvs-feature-detection-algorithms-ii/
+
+scape@scape-training:~/Install/OpenCV-2.4.3/samples/python2$ sudo python camera_qa.py --feature=orb /media/sf_tmp/trackleft/ /media/sf_tmp/trackright/
+
+http://docs.opencv.org/doc/tutorials/imgproc/histograms/histogram_calculation/histogram_calculation.html
+
+
+QUoRDS:
+=======
+
+web services and tests with some URL pairs (6) from your thumb.seeds.urls.txt file:
+
+1.	Test for blank page:
+http://127.0.0.1:8000/qa/blank?i1=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg 
+Result: {ocrMatch: 50}
+
+2.	Compare two screenshots with/without OCR. OCR is an optional parameter because it takes additional time:
+http://127.0.0.1:8000/qa/compare?i1=http://www.acses.org.uk/&i2=http://www.webarchive.org.uk/thumbs/66158797/66128255c.jpg&ocr=True  
+Result: {siftMatchedPoints: 277, totalSiftPoints: 1790, ocrMatch: 1747} // for ocr=true
+               {siftMatchedPoints: 279, totalSiftPoints: 1798, ocrMatch: 0} // for ocr=false
+3.	Compare URL pairs from given collection:
+http://127.0.0.1:8000/qa/comparecollection?seed=/opt/test_django/quords/qa/thumbs.urls.seed.txt 
+Result: 
+{siftMatchedPoints: 279, totalSiftPoints: 1797, ocrMatch: 0}
+{siftMatchedPoints: 94, totalSiftPoints: 4234, ocrMatch: 0}
+{siftMatchedPoints: 268, totalSiftPoints: 1552, ocrMatch: 0}
+{siftMatchedPoints: 40, totalSiftPoints: 2067, ocrMatch: 0}
+{siftMatchedPoints: 554, totalSiftPoints: 41214, ocrMatch: 0}
+
+The calculation results are stored in format: 
+
+  db = connection['test-database']
+    collection = db['test-collection']
+
+    log = {"current_time": current_time,
+           "execution_time": execution_time,
+           "orig_web_url": orig_link,
+           "wayback_image": wayback_link,
+           "wayback_timestamp": wayback_timestamp,
+           "fc1": fc1,
+           "fc2": fc2,
+           "mc": mc,
+           "msg": msg,
+           "ts1": ts1,
+           "ts2": ts2,
+           "ocr": ocr,
+           "img1_size": img1_size,
+           "img2_size": img2_size,
+           "psnr_similarity": psnr_similarity,
+           "psnr_threshold": psnr_threshold,
+           "psnr_msg": psnr_msg,
+           "orig_image": orig_link_path}
+
+Parameters meaning:
+
+The output file contains current timestamp, execution time, original link, wayback machine link, wayback timestamp,  
+number of SIFT features for the original file, number of SIFT features for the wayback file, number of matches, 
+conclusion message, threshold 1, threshold 2, OCR measurement, original screenshot size, wayback file size.
+--threshold1 - The threshold for high similarity (between 0 and 100)
+--threshold2 - The threshold for small differences (between 0 and threshold 1 value)
+
+
